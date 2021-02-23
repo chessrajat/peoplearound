@@ -8,6 +8,11 @@ import { userRouter } from "./Routes/API/Users";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+//Middleware init
+
+//get request body
+app.use(express.json())
+
 // connect to database
 connectDB();
 
@@ -16,7 +21,7 @@ app.get("/", (req, res) => {
 });
 
 // Define Routes
-app.use("/api/users", userRouter);
+app.use("/api/users", userRouter); 
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/posts", postsRouter);
