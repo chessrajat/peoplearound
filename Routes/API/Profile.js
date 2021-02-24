@@ -1,7 +1,10 @@
 import express from "express";
 import { check, validationResult } from "express-validator";
+import { restart } from "nodemon";
 import authMiddleware from "../../Middleware/Auth";
 import profileModel from "../../Models/ProfileModel";
+import mongoose from "mongoose";
+
 const router = express.Router();
 
 // @route     GET  api/profile/me
@@ -88,7 +91,7 @@ router.post(
         profile = await profileModel.findOneAndUpdate(
           { user: req.user.id },
           { $set: profileFields },
-          { new: true },
+          { new: true }
           // this new will give us the updated document
         );
         return res.json(profile);
@@ -105,5 +108,50 @@ router.post(
     res.send("hello");
   }
 );
+
+// @route     GET api/profile/
+// @desc      Get all user profile
+// @access    Public
+router.get("/", async (req, res) => {
+  try {
+    const profiles = await profileModel
+      .find()
+      .populate("user", ["name", "avatar"]);
+
+    res.json(profiles);
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send("Internal server Error");
+  }
+});
+
+// @route     GET api/profile/user/:user_id
+// @desc      Get profile of user by userid
+// @access    Public
+router.get("/user/:user_id", async (req, res) => {
+  try {
+    // before passing check if the user_id is the valid object id
+    const isValidId = mongoose.Types.ObjectId.isValid(req.params.user_id);
+    if (!isValidId) {
+      return res.status(400).json({ msg: "There is no profile for this user" });
+    }
+
+    const profile = await profileModel
+      .findOne({ user: req.params.user_id })
+      .populate("user", ["name", "avatar"]);
+
+    if (!profile) {
+      return res.status(400).json({ msg: "There is no profile for this user" });
+    }
+
+    res.json(profile);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind == "ObjectId") {
+      return res.status(400).json({ msg: "There is no profile for this user" });
+    }
+    res.status(500).send("Internal server Error");
+  }
+});
 
 export { router as profileRouter };
