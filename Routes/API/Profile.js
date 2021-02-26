@@ -157,15 +157,91 @@ router.get("/user/:user_id", async (req, res) => {
 // @route     GET api/profile
 // @desc      Delete profile, user and post
 // @access    Private
-router.delete("/",authMiddleware, async (req, res) => {
+router.delete("/", authMiddleware, async (req, res) => {
   try {
     // remove profile
-    await profileModel.findOneAndRemove({user: req.user.id})
+    await profileModel.findOneAndRemove({ user: req.user.id });
 
     // remove user
-    await userModel.findOneAndRemove({_id: req.user.id})
+    await userModel.findOneAndRemove({ _id: req.user.id });
 
-    res.json({msg: "User Deleted"});
+    res.json({ msg: "User Deleted" });
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send("Internal server Error");
+  }
+});
+
+// @route     PUT api/profile/experience
+// @desc      Add Profile experience
+// @access    Private
+router.put(
+  "/experience",
+  [
+    authMiddleware,
+    [
+      check("title", "Title is required").not().isEmpty(),
+      check("company", "Company is required").not().isEmpty(),
+      check("from", "From Date is required").not().isEmpty(),
+    ],
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const {
+      title,
+      company,
+      location,
+      from,
+      to,
+      current,
+      description,
+    } = req.body;
+
+    const newExp = {
+      title,
+      company,
+      location,
+      from,
+      to,
+      current,
+      description,
+    };
+
+    try {
+      const profile = await profileModel.findOne({ user: req.user.id });
+      profile.experience.unshift(newExp);
+      await profile.save();
+      res.json(profile);
+    } catch (err) {
+      console.log(err.message);
+      res.status(500).send("Internal server Error");
+    }
+  }
+);
+
+// @route     DELETE api/profile/experience/:exp_id
+// @desc      Add Profile experience
+// @access    Private
+router.delete("/experience/:exp_id", [authMiddleware], async (req, res) => {
+  const isValidId = mongoose.Types.ObjectId.isValid(req.params.exp_id);
+  if (!isValidId) {
+    return res.status(400).json({ msg: "There is no Experience with this id" });
+  }
+  const exp_id = req.params.exp_id;
+
+  try {
+    const profile = await profileModel.findOne({ user: req.user.id });
+    // Get the remove index
+    const removeIndex = profile.experience
+      .map((item) => item.id)
+      .indexOf(exp_id);
+
+    profile.experience.splice(removeIndex, 1);
+    await profile.save();
+    res.json(profile);
   } catch (err) {
     console.log(err.message);
     res.status(500).send("Internal server Error");
