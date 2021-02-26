@@ -1,6 +1,6 @@
 import express from "express";
 import { check, validationResult } from "express-validator";
-import { restart } from "nodemon";
+import userModel from "../../Models/UserModel";
 import authMiddleware from "../../Middleware/Auth";
 import profileModel from "../../Models/ProfileModel";
 import mongoose from "mongoose";
@@ -150,6 +150,24 @@ router.get("/user/:user_id", async (req, res) => {
     if (err.kind == "ObjectId") {
       return res.status(400).json({ msg: "There is no profile for this user" });
     }
+    res.status(500).send("Internal server Error");
+  }
+});
+
+// @route     GET api/profile
+// @desc      Delete profile, user and post
+// @access    Private
+router.delete("/",authMiddleware, async (req, res) => {
+  try {
+    // remove profile
+    await profileModel.findOneAndRemove({user: req.user.id})
+
+    // remove user
+    await userModel.findOneAndRemove({_id: req.user.id})
+
+    res.json({msg: "User Deleted"});
+  } catch (err) {
+    console.log(err.message);
     res.status(500).send("Internal server Error");
   }
 });
