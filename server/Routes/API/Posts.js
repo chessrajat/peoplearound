@@ -3,7 +3,6 @@ import { check, validationResult } from "express-validator";
 import authMiddleware from "../../Middleware/Auth";
 import postModal from "../../Models/PostModel";
 import userModel from "../../Models/UserModel";
-import { removeByAttr } from "../../Utils/ArrayRemove";
 const router = express.Router();
 
 // @route     POST  api/posts
@@ -204,7 +203,6 @@ router.delete(
   [authMiddleware],
   async (req, res) => {
     try {
-      const user = await userModel.findById(req.user.id).select("-password");
       const post = await postModal.findById(req.params.post_id);
 
       // get the comment from the post
