@@ -1,2 +1,4 @@
-export const SHOW_ALERT = "SHOW_ALERT"
-export const HIDE_ALERT = "HIDE_ALERT"
+export const SHOW_ALERT = "SHOW_ALERT";
+export const HIDE_ALERT = "HIDE_ALERT";
+export const REGISTER_SUCCESS = "REGISTER_SUCCESS";
+export const REGISTER_FAILED = "REGISTER_FAILED";
